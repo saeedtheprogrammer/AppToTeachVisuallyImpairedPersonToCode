@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera to Flask</title>
+</head>
+<body>
+    <h1>Camera Access with JavaScript</h1>
+    
+    <!-- Video element to display the camera stream -->
+    <video id="video" autoplay playsinline></video>
+    
+    <!-- Button to capture the image -->
+    <button id="capture">Capture</button>
+    
+    <!-- Hidden canvas to process the captured image -->
+    <canvas id="canvas" style="display:none;"></canvas>
+    
+    <!-- Section to display the captured image -->
+    <div>
+        <h3>Captured Image:</h3>
+        <img id="snapshot" src="" alt="Captured Image"/>
+    </div>
+
+    <script>
+        // HTML elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const captureButton = document.getElementById('capture');
+        const snapshot = document.getElementById('snapshot');
+
+        // Access the phone camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }) // Use rear camera if available
+            .then(stream => {
+                // Set the video source to the camera stream
+                video.srcObject = stream;
+            })
+            .catch(error => {
+                console.error('Error accessing the camera:', error);
+                alert('Camera access failed. Check your permissions and try again.');
+            });
+
+        // Capture image when button is clicked
+        captureButton.addEventListener('click', () => {
+            // Set canvas dimensions to match the video frame
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw the current video frame on the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert the captured image to a data URL
+            const dataUrl = canvas.toDataURL('image/png');
+            snapshot.src = dataUrl;
+
+            // Send the image to the server for processing
+            fetch('/process_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: dataUrl })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the generated code returned by the server
+                alert('Generated Code:\n' + data.generated_code);
+            })
+            .catch(error => {
+                console.error('Error processing image:', error);
+                alert('Image processing failed. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>
