@@ -1,1 +1,1 @@
-# AppToTeachVisuallyImpairedPersonToCode
+# AppToTeachVisuallyImpairedChildrenMaths
